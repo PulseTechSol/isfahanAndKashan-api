@@ -8,6 +8,7 @@ import {
 } from '@adminjs/design-system';
 
 const UPLOAD_URL = '/cloudinary/upload';
+const DELETE_URL = '/cloudinary/delete';
 const ALLOWED_TYPES = [
   'image/png',
   'image/jpeg',
@@ -72,7 +73,23 @@ const CloudinaryUrlUpload = ({ property, record, onChange }) => {
     }
   };
 
-  const handleRemove = (index) => {
+  const deleteFromCloudinary = async (url) => {
+    if (!url || !url.includes('cloudinary.com')) return;
+    try {
+      await fetch(DELETE_URL, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+        credentials: 'include',
+      });
+    } catch {
+      // Ignore delete errors - form will still update
+    }
+  };
+
+  const handleRemove = async (index) => {
+    const urlToRemove = urls[index];
+    await deleteFromCloudinary(urlToRemove);
     if (isMultiple) {
       const newUrls = urls.filter((_, i) => i !== index);
       onChange(property.path, newUrls);

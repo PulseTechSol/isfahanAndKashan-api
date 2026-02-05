@@ -124,7 +124,12 @@ const restrictDestructiveActions = {
                         list: AdminJS.bundle(imageListCellPath),
                       },
                       custom: { isMultiple: false },
-                      isVisible: { show: false }, // shown combined in images row
+                      isVisible: {
+                        list: true,
+                        show: false, // shown combined in images row
+                        edit: true,
+                        new: true,
+                      },
                     },
                     images: {
                       components: {

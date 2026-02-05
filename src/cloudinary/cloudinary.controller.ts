@@ -1,6 +1,8 @@
 // nest imports
 import {
+  Body,
   Controller,
+  Delete,
   Post,
   UploadedFile,
   UseInterceptors,
@@ -18,5 +20,10 @@ export class CloudinaryController {
   @UseInterceptors(FileInterceptor('file'))
   uploadImage(@UploadedFile() file: Express.Multer.File) {
     return this.cloudinaryService.uploadImageAndGetUrl(file);
+  }
+
+  @Delete('delete')
+  deleteImage(@Body('url') url: string) {
+    return this.cloudinaryService.deleteImageByUrl(url);
   }
 }

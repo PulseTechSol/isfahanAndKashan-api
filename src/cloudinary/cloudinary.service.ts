@@ -64,4 +64,20 @@ export class CloudinaryService {
     const result = await this.uploadImage(file);
     return { url: (result as UploadApiResponse).secure_url };
   }
+
+  /** Extract public_id from Cloudinary URL for delete */
+  private getPublicIdFromUrl(url: string): string | null {
+    const match = url.match(/\/upload\/v\d+\/(.+)\.\w+$/);
+    return match ? match[1] : null;
+  }
+
+  /** Delete image from Cloudinary by URL */
+  async deleteImageByUrl(url: string): Promise<{ deleted: boolean }> {
+    const publicId = this.getPublicIdFromUrl(url);
+    if (!publicId) {
+      throw new BadRequestException('Invalid Cloudinary URL');
+    }
+    const result = await cloudinary.uploader.destroy(publicId);
+    return { deleted: result.result === 'ok' };
+  }
 }
