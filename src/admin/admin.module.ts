@@ -1,3 +1,5 @@
+import * as os from 'os';
+import * as path from 'path';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { getConnectionToken } from '@nestjs/mongoose';
@@ -16,6 +18,22 @@ import { Payment, PaymentSchema } from '../payments/schemas/payment.schema';
 import { MongooseModule } from '@nestjs/mongoose';
 
 AdminJS.registerAdapter(AdminJSMongoose);
+
+// Upload-first: upload to Cloudinary, store URL in field
+const cloudinaryUrlUploadPath = path.join(
+  process.cwd(),
+  'src/admin/components/cloudinary-url-upload',
+);
+// Show view: display image previews instead of raw URLs
+const imageUrlShowPath = path.join(
+  process.cwd(),
+  'src/admin/components/image-url-show',
+);
+// List view: thumbnail in first column
+const imageListCellPath = path.join(
+  process.cwd(),
+  'src/admin/components/image-list-cell',
+);
 
 const restrictDestructiveActions = {
   delete: { isVisible: true, isAccessible: true },
@@ -74,6 +92,54 @@ const restrictDestructiveActions = {
                 options: {
                   navigation: { name: 'Catalog' },
                   actions: restrictDestructiveActions,
+                  listProperties: [
+                    'mainImage',
+                    'name',
+                    'id',
+                    'slug',
+                    'price',
+                    'isActive',
+                  ],
+                  properties: {
+                    description: {
+                      type: 'richtext',
+                      isVisible: {
+                        list: false,
+                        show: true,
+                        edit: true,
+                        new: true,
+                      },
+                    },
+                    createdAt: {
+                      isVisible: { edit: false, new: false },
+                    },
+                    updatedAt: {
+                      isVisible: { edit: false, new: false },
+                    },
+                    // Upload-first: select file → upload to Cloudinary → URL stored in payload
+                    mainImage: {
+                      components: {
+                        edit: AdminJS.bundle(cloudinaryUrlUploadPath),
+                        show: AdminJS.bundle(imageUrlShowPath),
+                        list: AdminJS.bundle(imageListCellPath),
+                      },
+                      custom: { isMultiple: false },
+                      isVisible: { show: false }, // shown combined in images row
+                    },
+                    images: {
+                      components: {
+                        edit: AdminJS.bundle(cloudinaryUrlUploadPath),
+                        show: AdminJS.bundle(imageUrlShowPath),
+                      },
+                      custom: { isMultiple: true, combineWithMain: true },
+                      isVisible: {
+                        list: false,
+                        show: true,
+                        edit: true,
+                        new: true,
+                      },
+                    },
+                  },
                 },
               },
               {
@@ -136,6 +202,11 @@ const restrictDestructiveActions = {
               httpOnly: true,
               maxAge: 24 * 60 * 60 * 1000, // 24 hours
             },
+          },
+          formidableOptions: {
+            uploadDir: os.tmpdir(),
+            maxFileSize: 10 * 1024 * 1024, // 10MB
+            keepExtensions: true,
           },
         };
       },

@@ -11,23 +11,23 @@ export class Product {
   @Prop({ required: true })
   name: string;
 
+  /** Rich text product description (HTML from TipTap editor) */
   @Prop({ default: '' })
   description: string;
 
-  @Prop({ type: [String], default: [] })
-  characteristics: string[];
+  /** Main product image - full Cloudinary URL (upload first, then store) */
+  @Prop({ default: '' })
+  mainImage: string;
 
+  /** Gallery images - full Cloudinary URLs (upload first, then store) */
   @Prop({ type: [String], default: [] })
-  imageUrls: string[];
+  images: string[];
+
+  @Prop({ required: true })
+  price: number;
 
   @Prop({ default: true })
   isActive: boolean;
-
-  @Prop()
-  stripePriceId?: string;
-
-  @Prop()
-  stripeProductId?: string;
 }
 
 export const ProductSchema = SchemaFactory.createForClass(Product);

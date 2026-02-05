@@ -9,6 +9,7 @@ import { ContactModule } from './contact/contact.module';
 import { PaymentsModule } from './payments/payments.module';
 import { StripeModule } from './stripe/stripe.module';
 import { AdminModule } from './admin/admin.module';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { AdminModule } from './admin/admin.module';
     ContactModule,
     PaymentsModule,
     StripeModule,
+    CloudinaryModule,
     AdminModule,
   ],
   controllers: [AppController],
