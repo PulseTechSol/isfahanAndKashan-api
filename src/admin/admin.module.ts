@@ -63,10 +63,7 @@ const restrictDestructiveActions = {
           );
         }
 
-        const getModel = <T>(
-          name: string,
-          schema: import('mongoose').Schema<T>,
-        ) => {
+        const getModel = (name: string, schema: any): any => {
           try {
             return connection.model(name);
           } catch {
