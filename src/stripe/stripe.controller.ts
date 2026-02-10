@@ -5,8 +5,11 @@ import {
   Headers,
   Req,
   BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
+import { Types } from 'mongoose';
 import { CreateCheckoutDto } from './dto/create-checkout.dto';
+import { CreatePaymentIntentDto } from './dto/create-payment-intent.dto';
 import { ConfigService } from '@nestjs/config';
 import { StripeService } from './stripe.service';
 import { UsersService } from '../users/users.service';
@@ -14,6 +17,29 @@ import { PaymentsService } from '../payments/payments.service';
 
 @Controller('stripe')
 export class StripeController {
+  @Post('create-payment-intent')
+  async createPaymentIntent(@Body() dto: CreatePaymentIntentDto) {
+    const order = await this.paymentsService.findOrderById(dto.orderId);
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+    if (order.status !== 'pending') {
+      throw new BadRequestException(
+        `Order cannot be paid (status: ${order.status})`,
+      );
+    }
+    const paymentIntent = await this.stripeService.createPaymentIntent({
+      amount: dto.amount,
+      currency: 'gbp',
+      metadata: { orderId: order._id.toString() },
+    });
+    await this.paymentsService.updateOrderPaymentIntentId(
+      order._id,
+      paymentIntent.id,
+    );
+    return { clientSecret: paymentIntent.client_secret };
+  }
+
   @Post('create-checkout-session')
   async createCheckoutSession(@Body() dto: CreateCheckoutDto) {
     const frontendUrl = this.configService.get<string>('FRONTEND_URL') || '';
@@ -161,18 +187,34 @@ export class StripeController {
   }
 
   private async handlePaymentIntentSucceeded(
-    paymentIntent: { id: string; amount?: number; currency?: string },
+    paymentIntent: {
+      id: string;
+      amount?: number;
+      currency?: string;
+      metadata?: { orderId?: string };
+    },
     eventId: string,
   ) {
     const existing = await this.paymentsService.findPaymentByEventId(eventId);
     if (existing) return;
 
+    const orderId =
+      paymentIntent.metadata?.orderId ||
+      (
+        await this.paymentsService.findOrderByPaymentIntentId(paymentIntent.id)
+      )?._id?.toString();
+
+    if (orderId) {
+      await this.paymentsService.updateOrderStatus(orderId, 'paid');
+    }
+
     await this.paymentsService.createPayment({
       stripePaymentIntentId: paymentIntent.id,
       stripeEventId: eventId,
+      orderId: orderId ? new Types.ObjectId(orderId) : undefined,
       status: 'succeeded',
       amount: paymentIntent.amount,
-      currency: paymentIntent.currency || 'usd',
+      currency: paymentIntent.currency || 'gbp',
     });
   }
 

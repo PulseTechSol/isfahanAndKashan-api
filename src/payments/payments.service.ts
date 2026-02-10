@@ -11,7 +11,17 @@ export class PaymentsService {
     @InjectModel(Payment.name) private paymentModel: Model<PaymentDocument>,
   ) {}
 
+  async generateOrderNumber(): Promise<string> {
+    const year = new Date().getFullYear();
+    const count = await this.orderModel.countDocuments().exec();
+    const seq = String(count + 1).padStart(5, '0');
+    return `IK-${year}-${seq}`;
+  }
+
   async createOrder(data: Partial<Order>): Promise<OrderDocument> {
+    if (!data.orderNumber) {
+      data.orderNumber = await this.generateOrderNumber();
+    }
     const order = new this.orderModel(data);
     return order.save();
   }
@@ -59,5 +69,26 @@ export class PaymentsService {
     id: string | Types.ObjectId,
   ): Promise<OrderDocument | null> {
     return this.orderModel.findById(id).exec();
+  }
+
+  async findOrderByPaymentIntentId(
+    stripePaymentIntentId: string,
+  ): Promise<OrderDocument | null> {
+    return this.orderModel.findOne({ stripePaymentIntentId }).exec();
+  }
+
+  async updateOrderPaymentIntentId(
+    orderId: string | Types.ObjectId,
+    stripePaymentIntentId: string,
+  ): Promise<OrderDocument | null> {
+    return this.orderModel
+      .findByIdAndUpdate(orderId, { stripePaymentIntentId }, { new: true })
+      .exec();
+  }
+
+  async findOrderByOrderNumber(
+    orderNumber: string,
+  ): Promise<OrderDocument | null> {
+    return this.orderModel.findOne({ orderNumber }).exec();
   }
 }

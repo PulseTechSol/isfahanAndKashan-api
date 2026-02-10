@@ -97,4 +97,18 @@ export class StripeService {
   getStripe(): Stripe {
     return this.stripe;
   }
+
+  async createPaymentIntent(params: {
+    amount: number;
+    currency: string;
+    metadata?: Record<string, string>;
+  }): Promise<Stripe.PaymentIntent> {
+    const paymentIntent = await this.stripe.paymentIntents.create({
+      amount: params.amount,
+      currency: params.currency,
+      automatic_payment_methods: { enabled: true },
+      metadata: params.metadata,
+    });
+    return paymentIntent;
+  }
 }
