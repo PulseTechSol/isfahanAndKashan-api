@@ -19,7 +19,8 @@ const OrderItemsShow = ({ property, record }) => {
   const arr = Array.isArray(items) ? items : [];
 
   const subtotalPence = arr.reduce(
-    (sum, item) => sum + (Number(item?.priceAmount) || 0) * (Number(item?.quantity) || 0),
+    (sum, item) =>
+      sum + (Number(item?.priceAmount) || 0) * (Number(item?.quantity) || 0),
     0,
   );
   const shippingPence = Math.max(0, Number(totalAmount) - subtotalPence);

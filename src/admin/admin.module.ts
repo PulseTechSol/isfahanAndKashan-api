@@ -44,6 +44,11 @@ const orderItemsShowPath = path.join(
   process.cwd(),
   'src/admin/components/order-items-show',
 );
+// Order list: status dropdown to update from listing page
+const orderStatusListPath = path.join(
+  process.cwd(),
+  'src/admin/components/order-status-list',
+);
 
 const restrictDestructiveActions = {
   delete: { isVisible: true, isAccessible: true },
@@ -173,8 +178,27 @@ const restrictDestructiveActions = {
                 options: {
                   navigation: { name: 'Commerce' },
                   actions: {
+                    new: { isVisible: false, isAccessible: false },
+                    edit: { isVisible: false, isAccessible: false },
                     delete: { isVisible: false, isAccessible: false },
                     bulkDelete: { isVisible: false, isAccessible: false },
+                    updateStatus: {
+                      actionType: 'record',
+                      isVisible: false,
+                      isAccessible: true,
+                      handler: async (request: any, _res: any, context: any) => {
+                        const { record, currentAdmin } = context;
+                        const status = request.payload?.status;
+                        if (!status) {
+                          return {
+                            record: record.toJSON(currentAdmin),
+                            notice: { type: 'error', message: 'Status required' },
+                          };
+                        }
+                        const updated = await record.update({ status }, context);
+                        return { record: updated.toJSON(currentAdmin) };
+                      },
+                    },
                   },
                   listProperties: [
                     'orderNumber',
@@ -187,17 +211,33 @@ const restrictDestructiveActions = {
                     _id: {
                       isVisible: { list: false, show: false, edit: false },
                     },
-                    orderNumber: { position: 1, title: 'Order number' },
+                    orderNumber: {
+                      position: 1,
+                      title: 'Order number',
+                      isVisible: { list: true, show: true, edit: false },
+                    },
                     firstName: {
                       position: 2,
                       title: 'Name',
-                      isVisible: { list: true, show: true, edit: true },
+                      isVisible: { list: true, show: true, edit: false },
                     },
                     lastName: {
-                      isVisible: { list: false, show: true, edit: true },
+                      isVisible: { list: false, show: true, edit: false },
                     },
-                    customerEmail: { position: 3, title: 'Email' },
-                    status: { position: 4, title: 'Order status' },
+                    customerEmail: {
+                      position: 3,
+                      title: 'Email',
+                      isVisible: { list: true, show: true, edit: false },
+                    },
+                    status: {
+                      position: 4,
+                      title: 'Order status',
+                      isVisible: { list: true, show: true, edit: true },
+                      components: {
+                        list: AdminJS.bundle(orderStatusListPath),
+                        show: AdminJS.bundle(orderStatusListPath),
+                      },
+                    },
                     totalAmount: {
                       position: 5,
                       isVisible: { list: true, show: false, edit: false },
@@ -227,6 +267,33 @@ const restrictDestructiveActions = {
                         show: AdminJS.bundle(orderItemsShowPath),
                       },
                     },
+                    address: {
+                      isVisible: { list: false, show: true, edit: false },
+                    },
+                    town: {
+                      isVisible: { list: false, show: true, edit: false },
+                    },
+                    state: {
+                      isVisible: { list: false, show: true, edit: false },
+                    },
+                    postCode: {
+                      isVisible: { list: false, show: true, edit: false },
+                    },
+                    country: {
+                      isVisible: { list: false, show: true, edit: false },
+                    },
+                    phoneNumber: {
+                      isVisible: { list: false, show: true, edit: false },
+                    },
+                    currency: {
+                      isVisible: { list: false, show: true, edit: false },
+                    },
+                    createdAt: {
+                      isVisible: { list: false, show: true, edit: false },
+                    },
+                    updatedAt: {
+                      isVisible: { list: false, show: true, edit: false },
+                    },
                   },
                 },
               },
@@ -235,6 +302,7 @@ const restrictDestructiveActions = {
                 options: {
                   navigation: { name: 'Commerce' },
                   actions: {
+                    new: { isVisible: false, isAccessible: false },
                     delete: { isVisible: false, isAccessible: false },
                     bulkDelete: { isVisible: false, isAccessible: false },
                     edit: { isVisible: false, isAccessible: false },

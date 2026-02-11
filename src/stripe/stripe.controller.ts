@@ -95,9 +95,11 @@ export class StripeController {
 
     const rawBody =
       req.rawBody ??
-      (req.body && Buffer.isBuffer(req.body) ? (req.body as Buffer) : undefined);
+      (req.body && Buffer.isBuffer(req.body) ? req.body : undefined);
     if (!rawBody || !Buffer.isBuffer(rawBody)) {
-      this.logger.warn('[Webhook] Step 3: No raw body (must be unparsed Buffer)');
+      this.logger.warn(
+        '[Webhook] Step 3: No raw body (must be unparsed Buffer)',
+      );
       throw new BadRequestException(
         'Raw body is required for webhook verification. Ensure bodyParser.raw is used for this route.',
       );

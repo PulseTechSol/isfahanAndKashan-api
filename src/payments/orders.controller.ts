@@ -4,10 +4,12 @@ import {
   Body,
   Get,
   Param,
+  Patch,
   NotFoundException,
 } from '@nestjs/common';
 import { PaymentsService } from './payments.service';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
 
 @Controller('orders')
 export class OrdersController {
@@ -41,6 +43,18 @@ export class OrdersController {
       orderNumber: order.orderNumber,
       status: order.status,
     };
+  }
+
+  @Patch(':id/status')
+  async updateOrderStatus(
+    @Param('id') id: string,
+    @Body() dto: UpdateOrderStatusDto,
+  ) {
+    const order = await this.paymentsService.updateOrderStatus(id, dto.status);
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+    return { status: order.status };
   }
 
   @Get(':id')
