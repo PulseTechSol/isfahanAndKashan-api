@@ -24,8 +24,8 @@ async function bootstrap() {
     },
   );
 
-  // Skip body parsing for /admin - AdminJS uses formidable and throws if body is pre-parsed
-  const skipForAdmin =
+  // Skip body parsing for /admin and /stripe/webhook (webhook needs raw body for signature verification)
+  const skipForAdminAndWebhook =
     (middleware: express.RequestHandler) =>
     (
       req: express.Request,
@@ -33,10 +33,11 @@ async function bootstrap() {
       next: express.NextFunction,
     ) => {
       if (req.path.startsWith('/admin')) return next();
+      if (req.path === '/stripe/webhook') return next();
       return middleware(req, res, next);
     };
-  app.use(skipForAdmin(express.json()));
-  app.use(skipForAdmin(express.urlencoded({ extended: true })));
+  app.use(skipForAdminAndWebhook(express.json()));
+  app.use(skipForAdminAndWebhook(express.urlencoded({ extended: true })));
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   const port = process.env.PORT ?? 3001;
   app.enableCors({

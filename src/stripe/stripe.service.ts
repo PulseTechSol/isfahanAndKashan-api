@@ -111,4 +111,16 @@ export class StripeService {
     });
     return paymentIntent;
   }
+
+  /** Retrieve existing PaymentIntent; returns null if not found or not reusable */
+  async getPaymentIntentIfConfirmable(
+    paymentIntentId: string,
+  ): Promise<Stripe.PaymentIntent | null> {
+    const pi = await this.stripe.paymentIntents.retrieve(paymentIntentId);
+    const confirmable = [
+      'requires_payment_method',
+      'requires_confirmation',
+    ].includes(pi.status);
+    return confirmable ? pi : null;
+  }
 }
