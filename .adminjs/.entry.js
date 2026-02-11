@@ -17,3 +17,7 @@ import Component7 from '../src/admin/components/gbp-amount-cell'
 AdminJS.UserComponents.Component7 = Component7
 import Component8 from '../src/admin/components/order-items-show'
 AdminJS.UserComponents.Component8 = Component8
+import Component9 from '../src/admin/components/gbp-amount-cell'
+AdminJS.UserComponents.Component9 = Component9
+import Component10 from '../src/admin/components/gbp-amount-cell'
+AdminJS.UserComponents.Component10 = Component10

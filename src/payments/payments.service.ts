@@ -1,15 +1,37 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Order, OrderDocument } from './schemas/order.schema';
 import { Payment, PaymentDocument } from './schemas/payment.schema';
 
 @Injectable()
-export class PaymentsService {
+export class PaymentsService implements OnModuleInit {
   constructor(
     @InjectModel(Order.name) private orderModel: Model<OrderDocument>,
     @InjectModel(Payment.name) private paymentModel: Model<PaymentDocument>,
   ) {}
+
+  async onModuleInit() {
+    await this.backfillPaymentOrderNumbers();
+  }
+
+  /** One-time backfill: set orderNumber on payments that have orderId but no orderNumber */
+  async backfillPaymentOrderNumbers(): Promise<number> {
+    const payments = await this.paymentModel
+      .find({ orderId: { $exists: true, $ne: null }, $or: [{ orderNumber: { $exists: false } }, { orderNumber: '' }] })
+      .lean()
+      .exec();
+    let updated = 0;
+    for (const p of payments) {
+      if (!p.orderId) continue;
+      const order = await this.findOrderById(p.orderId);
+      if (order?.orderNumber) {
+        await this.paymentModel.updateOne({ _id: p._id }, { orderNumber: order.orderNumber }).exec();
+        updated++;
+      }
+    }
+    return updated;
+  }
 
   async generateOrderNumber(): Promise<string> {
     const year = new Date().getFullYear();
@@ -55,6 +77,10 @@ export class PaymentsService {
   }
 
   async createPayment(data: Partial<Payment>): Promise<PaymentDocument> {
+    if (data.orderId && !data.orderNumber) {
+      const order = await this.findOrderById(data.orderId);
+      if (order?.orderNumber) data.orderNumber = order.orderNumber;
+    }
     const payment = new this.paymentModel(data);
     return payment.save();
   }

@@ -307,6 +307,59 @@ const restrictDestructiveActions = {
                     bulkDelete: { isVisible: false, isAccessible: false },
                     edit: { isVisible: false, isAccessible: false },
                   },
+                  listProperties: [
+                    'orderNumber',
+                    'status',
+                    'amount',
+                    'currency',
+                    'stripePaymentIntentId',
+                    'createdAt',
+                  ],
+                  properties: {
+                    orderId: {
+                      title: 'Order ID',
+                      isVisible: { list: false, show: true, edit: false },
+                    },
+                    orderNumber: {
+                      title: 'Order number',
+                      isVisible: { list: true, show: true, edit: false },
+                    },
+                    status: {
+                      title: 'Status',
+                      isVisible: { list: true, show: true, edit: false },
+                    },
+                    amount: {
+                      title: 'Amount',
+                      isVisible: { list: true, show: true, edit: false },
+                      components: {
+                        list: AdminJS.bundle(gbpAmountCellPath),
+                        show: AdminJS.bundle(gbpAmountCellPath),
+                      },
+                    },
+                    currency: {
+                      isVisible: { list: true, show: true, edit: false },
+                    },
+                    stripePaymentIntentId: {
+                      title: 'Stripe Payment Intent',
+                      isVisible: { list: true, show: true, edit: false },
+                    },
+                    stripeChargeId: {
+                      isVisible: { list: false, show: true, edit: false },
+                    },
+                    stripeCustomerId: {
+                      isVisible: { list: false, show: true, edit: false },
+                    },
+                    stripeEventId: {
+                      isVisible: { list: false, show: true, edit: false },
+                    },
+                    createdAt: {
+                      title: 'Created',
+                      isVisible: { list: true, show: true, edit: false },
+                    },
+                    updatedAt: {
+                      isVisible: { list: false, show: true, edit: false },
+                    },
+                  },
                 },
               },
             ],

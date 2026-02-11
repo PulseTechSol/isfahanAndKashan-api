@@ -15,6 +15,9 @@ export class Payment {
   orderId?: Types.ObjectId;
 
   @Prop()
+  orderNumber?: string;
+
+  @Prop()
   stripeCustomerId?: string;
 
   @Prop({ default: 'pending' })
