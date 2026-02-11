@@ -1,0 +1,76 @@
+/* Red sidebar theme – website red #6D1212, logo and text in cream #FDF4E3 */
+
+[data-css="sidebar"] {
+  background-color: #6D1212 !important;
+  border-right-color: rgba(253, 244, 227, 0.2) !important;
+  color: #FDF4E3 !important;
+}
+[data-css="sidebar"] * {
+  color: inherit;
+}
+
+/* Logo area: keep link and text visible (cream) */
+[data-css="sidebar"] [data-css="sidebar-logo"],
+[data-css="sidebar"] [data-css="sidebar-logo"] h1 {
+  color: #FDF4E3 !important;
+}
+[data-css="sidebar"] [data-css="sidebar-logo"]:hover h1 {
+  color: #fff !important;
+}
+[data-css="sidebar"] [data-css="sidebar-logo"] img {
+  /* Logo SVG from frontend has fill #FDF4E3 – remains visible on red */
+  filter: none;
+}
+
+/* Navigation label (e.g. "NAVIGATION") */
+[data-css="sidebar"] [data-css="sidebar-resources"] [class*="Label"],
+[data-css="sidebar"] [data-css="sidebar-resources"] label,
+[data-css="sidebar"] p[class*="label"] {
+  color: rgba(253, 244, 227, 0.85) !important;
+}
+
+/* All nav links and text in sidebar (explicit so they stay visible) */
+[data-css="sidebar"] a,
+[data-css="sidebar"] [role="link"],
+[data-css="sidebar"] span,
+[data-css="sidebar"] [class*="Navigation"],
+[data-css="sidebar"] li,
+[data-css="sidebar"] button {
+  color: #FDF4E3 !important;
+}
+[data-css="sidebar"] a:hover,
+[data-css="sidebar"] [class*="Navigation"]:hover,
+[data-css="sidebar"] button[class*="Navigation"]:hover {
+  color: #fff !important;
+}
+
+/* Selected/active nav item – slightly brighter */
+[data-css="sidebar"] [class*="Navigation"][class*="selected"],
+[data-css="sidebar"] a[aria-current="true"] {
+  color: #fff !important;
+  font-weight: 600;
+}
+
+/* Icons in sidebar (fill so they’re visible on red) */
+[data-css="sidebar"] svg {
+  fill: #FDF4E3 !important;
+}
+[data-css="sidebar"] a:hover svg,
+[data-css="sidebar"] [class*="Navigation"]:hover svg {
+  fill: #fff !important;
+}
+
+/* Open section background – slightly lighter red */
+[data-css="sidebar"] [class*="Navigation"][class*="open"],
+[data-css="sidebar"] [class*="navigation-element"] {
+  background-color: transparent !important;
+}
+[data-css="sidebar"] [class*="Navigation"][class*="open"] {
+  background-color: rgba(138, 26, 26, 0.5) !important;
+}
+
+/* Sidebar footer if any */
+[data-css="sidebar-footer"] {
+  border-top-color: rgba(253, 244, 227, 0.2) !important;
+  color: #FDF4E3 !important;
+}

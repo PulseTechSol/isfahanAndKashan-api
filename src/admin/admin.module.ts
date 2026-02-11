@@ -49,6 +49,11 @@ const orderStatusListPath = path.join(
   process.cwd(),
   'src/admin/components/order-status-list',
 );
+// Replace default dashboard: redirect to Product list after login
+const dashboardRedirectPath = path.join(
+  process.cwd(),
+  'src/admin/components/dashboard-redirect-to-products',
+);
 
 const restrictDestructiveActions = {
   delete: { isVisible: true, isAccessible: true },
@@ -95,9 +100,52 @@ const restrictDestructiveActions = {
         const OrderModel = getModel(Order.name, OrderSchema);
         const PaymentModel = getModel(Payment.name, PaymentSchema);
 
+        const frontendUrl =
+          configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
+
+        const theme = {
+          colors: {
+            primary100: '#6D1212',
+            primary80: '#8a1a1a',
+            primary60: '#a72222',
+            primary40: '#c44a4a',
+            primary20: '#e18a8a',
+            grey100: '#171a23',
+            grey80: '#454655',
+            grey60: '#898A9A',
+            grey40: '#C0C0CA',
+            grey20: '#F6F7FB',
+            filterBg: '#171a23',
+            hoverBg: '#252a36',
+            bg: '#FDF4E3',
+            border: '#e8e0d0',
+            inputBorder: '#C0C0CA',
+            highlight: '#FDF4E3',
+            infoDark: '#6D1212',
+            info: '#a72222',
+            infoLight: '#e18a8a',
+          },
+        };
+
+        const branding = (currentAdmin?: { email: string }) => ({
+          companyName: 'Isfahan & Kashan Admin',
+          logo: currentAdmin ? `${frontendUrl}/logo.svg` : '/logo-red.svg',
+          favicon: `${frontendUrl}/favicon.ico`,
+          withMadeWithLove: false,
+          theme,
+        });
+
         return {
           adminJsOptions: {
             rootPath: '/admin',
+            assets: {
+              styles: ['/admin-sidebar-theme.css'],
+            },
+            branding,
+            dashboard: {
+              component: AdminJS.bundle(dashboardRedirectPath),
+              handler: async () => ({}),
+            },
             resources: [
               {
                 resource: ProductModel,
@@ -162,14 +210,14 @@ const restrictDestructiveActions = {
               {
                 resource: UserModel,
                 options: {
-                  navigation: { name: 'Users' },
+                  navigation: false,
                   actions: restrictDestructiveActions,
                 },
               },
               {
                 resource: ContactInquiryModel,
                 options: {
-                  navigation: { name: 'Support' },
+                  navigation: false,
                   actions: restrictDestructiveActions,
                 },
               },
@@ -186,16 +234,26 @@ const restrictDestructiveActions = {
                       actionType: 'record',
                       isVisible: false,
                       isAccessible: true,
-                      handler: async (request: any, _res: any, context: any) => {
+                      handler: async (
+                        request: any,
+                        _res: any,
+                        context: any,
+                      ) => {
                         const { record, currentAdmin } = context;
                         const status = request.payload?.status;
                         if (!status) {
                           return {
                             record: record.toJSON(currentAdmin),
-                            notice: { type: 'error', message: 'Status required' },
+                            notice: {
+                              type: 'error',
+                              message: 'Status required',
+                            },
                           };
                         }
-                        const updated = await record.update({ status }, context);
+                        const updated = await record.update(
+                          { status },
+                          context,
+                        );
                         return { record: updated.toJSON(currentAdmin) };
                       },
                     },
@@ -363,9 +421,6 @@ const restrictDestructiveActions = {
                 },
               },
             ],
-            branding: {
-              companyName: 'Isfahan & Kashan Admin',
-            },
           },
           auth: {
             authenticate: async (email: string, password: string) => {
