@@ -28,6 +28,7 @@ export class OrdersController {
       items: dto.items.map((i) => ({
         productSlug: i.productSlug,
         productName: i.productName,
+        productImage: i.productImage,
         quantity: i.quantity,
         priceAmount: i.priceAmount,
       })),

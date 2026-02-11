@@ -21,6 +21,10 @@ export class OrderItemDto {
   @IsString()
   productName?: string;
 
+  @IsOptional()
+  @IsString()
+  productImage?: string;
+
   @IsNumber()
   @Min(1)
   quantity: number;

@@ -14,6 +14,9 @@ export class OrderItem {
   @Prop()
   productName?: string;
 
+  @Prop()
+  productImage?: string;
+
   @Prop({ default: 1 })
   quantity: number;
 

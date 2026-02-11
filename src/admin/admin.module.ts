@@ -34,6 +34,16 @@ const imageListCellPath = path.join(
   process.cwd(),
   'src/admin/components/image-list-cell',
 );
+// Amount in pence displayed as GBP
+const gbpAmountCellPath = path.join(
+  process.cwd(),
+  'src/admin/components/gbp-amount-cell',
+);
+// Order show: items with image, name, price, shipping
+const orderItemsShowPath = path.join(
+  process.cwd(),
+  'src/admin/components/order-items-show',
+);
 
 const restrictDestructiveActions = {
   delete: { isVisible: true, isAccessible: true },
@@ -165,6 +175,58 @@ const restrictDestructiveActions = {
                   actions: {
                     delete: { isVisible: false, isAccessible: false },
                     bulkDelete: { isVisible: false, isAccessible: false },
+                  },
+                  listProperties: [
+                    'orderNumber',
+                    'firstName',
+                    'customerEmail',
+                    'status',
+                    'totalAmount',
+                  ],
+                  properties: {
+                    _id: {
+                      isVisible: { list: false, show: false, edit: false },
+                    },
+                    orderNumber: { position: 1, title: 'Order number' },
+                    firstName: {
+                      position: 2,
+                      title: 'Name',
+                      isVisible: { list: true, show: true, edit: true },
+                    },
+                    lastName: {
+                      isVisible: { list: false, show: true, edit: true },
+                    },
+                    customerEmail: { position: 3, title: 'Email' },
+                    status: { position: 4, title: 'Order status' },
+                    totalAmount: {
+                      position: 5,
+                      isVisible: { list: true, show: false, edit: false },
+                      title: 'Price',
+                      components: {
+                        list: AdminJS.bundle(gbpAmountCellPath),
+                      },
+                    },
+                    stripeCheckoutSessionId: {
+                      isVisible: { list: false, show: false, edit: false },
+                    },
+                    stripePaymentIntentId: {
+                      isVisible: { list: false, show: false, edit: false },
+                    },
+                    stripeSubscriptionId: {
+                      isVisible: { list: false, show: false, edit: false },
+                    },
+                    stripeCustomerId: {
+                      isVisible: { list: false, show: false, edit: false },
+                    },
+                    customerId: {
+                      isVisible: { list: false, show: false, edit: false },
+                    },
+                    items: {
+                      isVisible: { list: false, show: true, edit: false },
+                      components: {
+                        show: AdminJS.bundle(orderItemsShowPath),
+                      },
+                    },
                   },
                 },
               },
