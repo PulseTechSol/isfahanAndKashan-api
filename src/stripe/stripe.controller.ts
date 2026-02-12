@@ -15,6 +15,7 @@ import { ConfigService } from '@nestjs/config';
 import { StripeService } from './stripe.service';
 import { UsersService } from '../users/users.service';
 import { PaymentsService } from '../payments/payments.service';
+import { MailService } from '../mail/mail.service';
 
 @Controller('stripe')
 export class StripeController {
@@ -78,6 +79,7 @@ export class StripeController {
     private configService: ConfigService,
     private usersService: UsersService,
     private paymentsService: PaymentsService,
+    private mailService: MailService,
   ) {}
 
   @Post('webhook')
@@ -195,11 +197,12 @@ export class StripeController {
       `[Webhook] handleCheckoutCompleted: existingOrder=${!!existingOrder}`,
     );
 
+    let order;
     if (existingOrder) {
       this.logger.log(
         '[Webhook] handleCheckoutCompleted: updating existing order to paid',
       );
-      await this.paymentsService.updateOrderBySessionId(session.id, {
+      order = await this.paymentsService.updateOrderBySessionId(session.id, {
         status: 'paid',
         totalAmount: session.amount_total ?? undefined,
         currency: session.currency || 'usd',
@@ -219,13 +222,14 @@ export class StripeController {
       }> = [];
       if (session.metadata?.items) {
         try {
-          items = JSON.parse(session.metadata.items);
+          const parsed = JSON.parse(session.metadata.items) as typeof items;
+          items = parsed;
         } catch {
           // ignore
         }
       }
 
-      await this.paymentsService.createOrder({
+      order = await this.paymentsService.createOrder({
         stripeCheckoutSessionId: session.id,
         stripeCustomerId,
         customerId: user?._id,
@@ -244,6 +248,20 @@ export class StripeController {
         currency: session.currency || 'usd',
       });
       this.logger.log('[Webhook] handleCheckoutCompleted: new order created');
+    }
+    if (order) {
+      this.logger.log(
+        `[Webhook] handleCheckoutCompleted: sending order emails for order ${order.orderNumber ?? order._id}, customerEmail=${order.customerEmail ?? 'N/A'}`,
+      );
+      await this.mailService.sendNewOrderNotificationToAdmin(order);
+      await this.mailService.sendOrderConfirmationToCustomer(order);
+      this.logger.log(
+        '[Webhook] handleCheckoutCompleted: order emails completed',
+      );
+    } else {
+      this.logger.warn(
+        '[Webhook] handleCheckoutCompleted: no order to send emails for',
+      );
     }
     this.logger.log('[Webhook] handleCheckoutCompleted: done');
   }
@@ -300,6 +318,24 @@ export class StripeController {
       this.logger.log(
         `[Webhook] handlePaymentIntentSucceeded: Order ${orderId} marked as paid`,
       );
+      const order = await this.paymentsService.findOrderById(orderId);
+      this.logger.log(
+        `[Webhook] handlePaymentIntentSucceeded: order for emails=${order ? order.orderNumber : 'null'}, customerEmail=${order?.customerEmail ?? 'N/A'}`,
+      );
+      if (order) {
+        this.logger.log(
+          '[Webhook] handlePaymentIntentSucceeded: sending order emails (admin + customer)',
+        );
+        await this.mailService.sendNewOrderNotificationToAdmin(order);
+        await this.mailService.sendOrderConfirmationToCustomer(order);
+        this.logger.log(
+          '[Webhook] handlePaymentIntentSucceeded: order emails completed',
+        );
+      } else {
+        this.logger.warn(
+          '[Webhook] handlePaymentIntentSucceeded: order not found by id, skipping emails',
+        );
+      }
     } else {
       this.logger.warn(
         `[Webhook] handlePaymentIntentSucceeded: no order found for PaymentIntent ${paymentIntent.id}`,
