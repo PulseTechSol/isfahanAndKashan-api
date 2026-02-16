@@ -1,0 +1,13 @@
+diff --git a/node_modules/@adminjs/mongoose/lib/src/resource.js b/node_modules/@adminjs/mongoose/lib/src/resource.js
+index 1234567..abcdefg 100644
+--- a/node_modules/@adminjs/mongoose/lib/src/resource.js
++++ b/node_modules/@adminjs/mongoose/lib/src/resource.js
+@@ -51,7 +51,7 @@ class Resource extends adminjs_1.BaseResource {
+     }
+     async count(filters = null) {
+         if (Object.keys(convert_filter_1.convertFilter(filters)).length > 0) {
+-            return this.MongooseModel.count(convert_filter_1.convertFilter(filters));
++            return this.MongooseModel.countDocuments(convert_filter_1.convertFilter(filters));
+         }
+         return this.MongooseModel.estimatedDocumentCount();
+     }
