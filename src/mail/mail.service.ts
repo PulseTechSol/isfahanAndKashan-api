@@ -4,11 +4,11 @@ import * as nodemailer from 'nodemailer';
 import type { OrderDocument } from '../payments/schemas/order.schema';
 
 const BRAND = {
-  name: 'Isfahan & Kashan',
+  name: 'Herati Rugs',
   maroon: '#6D1212',
   gold: '#E7BE88',
   cream: '#FDF4E3',
-  website: 'https://www.isfahanandkashan.com',
+  website: 'https://heratirugs.com',
 };
 
 /** Format amount (stored in cents) to currency string */
@@ -98,7 +98,7 @@ export class MailService implements OnModuleInit {
     });
   }
 
-  /** Send "New order" notification to business (hello@isfahanandkashan.com) */
+  /** Send "New order" notification to business (hello@heratirugs.com) */
   async sendNewOrderNotificationToAdmin(
     order: OrderDocument | { [key: string]: unknown },
   ): Promise<void> {
