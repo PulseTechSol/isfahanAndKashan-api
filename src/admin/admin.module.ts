@@ -1,5 +1,6 @@
 import * as os from 'os';
 import * as path from 'path';
+import MongoStore from 'connect-mongo';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { getConnectionToken } from '@nestjs/mongoose';
@@ -433,9 +434,14 @@ const restrictDestructiveActions = {
             cookiePassword: cookieSecret,
           },
           sessionOptions: {
-            secret: cookieSecret,
+            resave: false,
             saveUninitialized: false,
-            resave: true,
+            secret: cookieSecret,
+            store: MongoStore.create({
+              mongoUrl: configService.get<string>('MONGO_URI'),
+              collectionName: 'adminjs_sessions',
+              ttl: 24 * 60 * 60, // 24 hours in seconds
+            }),
             cookie: {
               secure: process.env.NODE_ENV === 'production',
               sameSite: 'lax',
