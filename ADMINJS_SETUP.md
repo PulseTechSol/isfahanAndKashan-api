@@ -90,11 +90,13 @@ Key configuration:
 
 ## Production (custom components)
 
-A **patch** is applied to `@adminjs/nestjs` so that in production the app calls `admin.initialize()` on startup. That builds the components bundle (`.adminjs/bundle.js`) so custom components (order status, GBP amount, images, etc.) load instead of "Component has not been bundled".
+Custom AdminJS UI (image thumbnails, order status, GBP amounts, etc.) is bundled to `.adminjs/bundle.js` during **`npm run build`**.
 
-- **Required:** Set `NODE_ENV=production` when starting the app.
-- **Required:** Deploy the **`src/admin/components`** folder with the app (the bundler reads the JSX files from disk). If you only deploy `dist/`, the bundle cannot be built.
-- After `npm install`, `patch-package` (postinstall) reapplies the patch automatically.
+- **Required:** Set `NODE_ENV=production` when starting the app (Railway sets this automatically).
+- **Recommended:** Set `ADMIN_JS_SKIP_BUNDLE=true` in production so the app serves the pre-built bundle instead of rebundling on startup.
+- A **patch** on `@adminjs/nestjs` awaits `admin.initialize()` before serving `/admin` when `ADMIN_JS_SKIP_BUNDLE` is not set.
+- `patch-package` runs on `npm install` (it is a production dependency so Railway applies the patch).
+- JSX components are copied to `dist/admin/components` during build; path resolution also checks `src/admin/components` for local dev.
 
 ## Troubleshooting
 
@@ -104,4 +106,4 @@ A **patch** is applied to `@adminjs/nestjs` so that in production the app calls 
 | Login fails                                                         | Verify `ADMIN_EMAIL` and `ADMIN_PASSWORD` match exactly |
 | Session lost on refresh                                             | Ensure `ADMIN_COOKIE_SECRET` is at least 32 characters  |
 | 404 on /admin                                                       | Confirm the backend is running and the path is `/admin` |
-| "Component has not been bundled" in production                      | Set `NODE_ENV=production` and deploy `src/admin/components`; see **Production** above. |
+| "Component has not been bundled" in production                      | Ensure `npm run build` completes (creates `.adminjs/bundle.js`), set `NODE_ENV=production`, and add `ADMIN_JS_SKIP_BUNDLE=true`; redeploy. |

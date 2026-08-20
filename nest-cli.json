@@ -3,9 +3,9 @@
   "collection": "@nestjs/schematics",
   "sourceRoot": "src",
   "compilerOptions": {
-    "deleteOutDir": true
-  },
-  "assets": [
-    "admin/components/**/*.jsx"
-  ]
+    "deleteOutDir": true,
+    "assets": [
+      "admin/components/**/*.jsx"
+    ]
+  }
 }

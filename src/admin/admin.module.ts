@@ -1,5 +1,4 @@
 import * as os from 'os';
-import * as path from 'path';
 import MongoStore from 'connect-mongo';
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -17,44 +16,11 @@ import {
 import { Order, OrderSchema } from '../payments/schemas/order.schema';
 import { Payment, PaymentSchema } from '../payments/schemas/payment.schema';
 import { MongooseModule } from '@nestjs/mongoose';
+import { bundleAdminComponents } from './admin-js-components';
 
 AdminJS.registerAdapter(AdminJSMongoose);
 
-// Upload-first: upload to Cloudinary, store URL in field
-const cloudinaryUrlUploadPath = path.join(
-  process.cwd(),
-  'src/admin/components/cloudinary-url-upload',
-);
-// Show view: display image previews instead of raw URLs
-const imageUrlShowPath = path.join(
-  process.cwd(),
-  'src/admin/components/image-url-show',
-);
-// List view: thumbnail in first column
-const imageListCellPath = path.join(
-  process.cwd(),
-  'src/admin/components/image-list-cell',
-);
-// Amount in pence displayed as GBP
-const gbpAmountCellPath = path.join(
-  process.cwd(),
-  'src/admin/components/gbp-amount-cell',
-);
-// Order show: items with image, name, price, shipping
-const orderItemsShowPath = path.join(
-  process.cwd(),
-  'src/admin/components/order-items-show',
-);
-// Order list: status dropdown to update from listing page
-const orderStatusListPath = path.join(
-  process.cwd(),
-  'src/admin/components/order-status-list',
-);
-// Replace default dashboard: redirect to Product list after login
-const dashboardRedirectPath = path.join(
-  process.cwd(),
-  'src/admin/components/dashboard-redirect-to-products',
-);
+const adminComponents = bundleAdminComponents();
 
 const restrictDestructiveActions = {
   delete: { isVisible: true, isAccessible: true },
@@ -144,7 +110,7 @@ const restrictDestructiveActions = {
             },
             branding,
             dashboard: {
-              component: AdminJS.bundle(dashboardRedirectPath),
+              component: adminComponents.dashboardComponent,
               handler: async () => ({}),
             },
             resources: [
@@ -179,11 +145,7 @@ const restrictDestructiveActions = {
                     },
                     // Upload-first: select file → upload to Cloudinary → URL stored in payload
                     mainImage: {
-                      components: {
-                        edit: AdminJS.bundle(cloudinaryUrlUploadPath),
-                        show: AdminJS.bundle(imageUrlShowPath),
-                        list: AdminJS.bundle(imageListCellPath),
-                      },
+                      components: adminComponents.productMainImage,
                       custom: { isMultiple: false },
                       isVisible: {
                         list: true,
@@ -193,10 +155,7 @@ const restrictDestructiveActions = {
                       },
                     },
                     images: {
-                      components: {
-                        edit: AdminJS.bundle(cloudinaryUrlUploadPath),
-                        show: AdminJS.bundle(imageUrlShowPath),
-                      },
+                      components: adminComponents.productImages,
                       custom: { isMultiple: true, combineWithMain: true },
                       isVisible: {
                         list: false,
@@ -292,18 +251,13 @@ const restrictDestructiveActions = {
                       position: 4,
                       title: 'Order status',
                       isVisible: { list: true, show: true, edit: true },
-                      components: {
-                        list: AdminJS.bundle(orderStatusListPath),
-                        show: AdminJS.bundle(orderStatusListPath),
-                      },
+                      components: adminComponents.orderStatus,
                     },
                     totalAmount: {
                       position: 5,
                       isVisible: { list: true, show: false, edit: false },
                       title: 'Price',
-                      components: {
-                        list: AdminJS.bundle(gbpAmountCellPath),
-                      },
+                      components: adminComponents.orderTotalAmount,
                     },
                     stripeCheckoutSessionId: {
                       isVisible: { list: false, show: false, edit: false },
@@ -322,9 +276,7 @@ const restrictDestructiveActions = {
                     },
                     items: {
                       isVisible: { list: false, show: true, edit: false },
-                      components: {
-                        show: AdminJS.bundle(orderItemsShowPath),
-                      },
+                      components: adminComponents.orderItems,
                     },
                     address: {
                       isVisible: { list: false, show: true, edit: false },
@@ -390,10 +342,7 @@ const restrictDestructiveActions = {
                     amount: {
                       title: 'Amount',
                       isVisible: { list: true, show: true, edit: false },
-                      components: {
-                        list: AdminJS.bundle(gbpAmountCellPath),
-                        show: AdminJS.bundle(gbpAmountCellPath),
-                      },
+                      components: adminComponents.paymentAmount,
                     },
                     currency: {
                       isVisible: { list: true, show: true, edit: false },
