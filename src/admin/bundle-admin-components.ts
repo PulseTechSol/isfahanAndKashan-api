@@ -2,12 +2,11 @@ import AdminJS from 'adminjs';
 import { bundleAdminComponents } from './admin-js-components';
 
 /**
- * Pre-builds .adminjs/bundle.js during `npm run build`.
- * Run with NODE_ENV=production so AdminJS writes the components bundle to disk.
+ * Pre-builds dist/.adminjs/bundle.js during `npm run build`.
+ * ADMIN_JS_TMP_DIR and NODE_ENV must be set in the shell before Node starts
+ * so AdminJS reads the output path when its module loads.
  */
 async function main(): Promise<void> {
-  process.env.NODE_ENV = 'production';
-
   const components = bundleAdminComponents();
 
   const admin = new AdminJS({
@@ -20,7 +19,9 @@ async function main(): Promise<void> {
   });
 
   await admin.initialize();
-  console.log('AdminJS: components bundle written to .adminjs/bundle.js');
+  console.log(
+    'AdminJS: components bundle written to dist/.adminjs/bundle.js',
+  );
 }
 
 main().catch((error: unknown) => {

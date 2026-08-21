@@ -10,12 +10,19 @@ diff --git a/node_modules/@adminjs/nestjs/build/admin.module.js b/node_modules/@
          if ('shouldBeInitialized' in this.adminModuleOptions && !this.adminModuleOptions.shouldBeInitialized) {
              return;
          }
-@@ -70,6 +70,9 @@
+@@ -70,6 +70,14 @@
          const adminJSOptions = forFeatureResources.length > 0
              ? Object.assign(Object.assign({}, this.adminModuleOptions.adminJsOptions), { resources: forFeatureResources }) : this.adminModuleOptions.adminJsOptions;
          const admin = new adminjs_1.default(adminJSOptions);
-+        if (process.env.NODE_ENV === 'production' && process.env.ADMIN_JS_SKIP_BUNDLE !== 'true') {
-+            await admin.initialize();
++        if (process.env.NODE_ENV === 'production') {
++            const fs = require('fs');
++            const path = require('path');
++            const tmpDir = process.env.ADMIN_JS_TMP_DIR || '.adminjs';
++            const bundlePath = path.join(process.cwd(), tmpDir, 'bundle.js');
++            const skipBundle = process.env.ADMIN_JS_SKIP_BUNDLE === 'true';
++            if (!skipBundle || !fs.existsSync(bundlePath)) {
++                await admin.initialize();
++            }
 +        }
          const { httpAdapter } = this.httpAdapterHost;
          this.loader.register(admin, httpAdapter, Object.assign(Object.assign({}, this.adminModuleOptions), { adminJsOptions: admin.options }));
