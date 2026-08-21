@@ -94,10 +94,10 @@ Custom AdminJS UI (image thumbnails, order status, GBP amounts, etc.) is bundled
 
 - **Required:** `NODE_ENV=production` when starting the app (Railway sets this automatically).
 - **Required:** `npm run build` must log `AdminJS: components bundle written to dist/.adminjs/bundle.js`.
-- `start:prod` preloads `admin-env.js` so AdminJS serves the bundle from `dist/.adminjs/`.
-- If the bundle file is missing at startup, the `@adminjs/nestjs` patch rebuilds it automatically.
+- `start:prod` preloads `admin-env.js` and runs `prepareAdminJsBundle()` before Nest starts.
+- If the bundle file is missing at startup, it is rebuilt automatically via a subprocess.
 - Do **not** set `ADMIN_JS_SKIP_BUNDLE=true` unless you have confirmed the bundle file exists in the deploy artifact.
-- `patch-package` runs on `npm install` (production dependency) to apply the NestJS patch.
+- `patch-package` runs on `npm install` for the `@adminjs/mongoose` compatibility patch only.
 
 ## Troubleshooting
 
@@ -109,4 +109,5 @@ Custom AdminJS UI (image thumbnails, order status, GBP amounts, etc.) is bundled
 | 404 on /admin                                                       | Confirm the backend is running and the path is `/admin` |
 | "Component has not been bundled" in production                      | Check Railway build logs for `dist/.adminjs/bundle.js`; remove `ADMIN_JS_SKIP_BUNDLE` if set; redeploy. |
 | `NotFoundError` on `/admin/frontend/assets/components.bundle.js`    | Same as above — bundle file missing from deploy. |
-| `There is no property of the name: "id"` on Product                 | Use `_id` for MongoDB documents in `listProperties`. |
+| `There is no property of the name: "id"` on Product                 | Remove `id` from Product `listProperties` (MongoDB uses `_id` internally). |
+| `patch-package` fails on deploy                                     | Check `patches/` — only `@adminjs/mongoose` should remain. |
