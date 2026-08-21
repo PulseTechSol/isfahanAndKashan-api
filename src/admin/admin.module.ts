@@ -102,6 +102,10 @@ const restrictDestructiveActions = {
           theme,
         });
 
+        const useSecureCookies =
+          process.env.ADMIN_COOKIE_SECURE === 'true' ||
+          process.env.RAILWAY_ENVIRONMENT === 'production';
+
         return {
           adminJsOptions: {
             rootPath: '/admin',
@@ -391,7 +395,8 @@ const restrictDestructiveActions = {
               ttl: 24 * 60 * 60, // 24 hours in seconds
             }),
             cookie: {
-              secure: process.env.NODE_ENV === 'production',
+              // Secure cookies need HTTPS. Enabled on Railway; off for local http://localhost.
+              secure: useSecureCookies,
               sameSite: 'lax',
               httpOnly: true,
               maxAge: 24 * 60 * 60 * 1000, // 24 hours

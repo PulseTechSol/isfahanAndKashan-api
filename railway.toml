@@ -1,6 +1,10 @@
 [build]
-buildCommand = "npm run build"
+buildCommand = "npm install --include=dev && npm run build"
 
 [deploy]
 startCommand = "npm run start:prod"
 restartPolicyType = "on_failure"
+
+[deploy.env]
+NODE_ENV = "production"
+ADMIN_COOKIE_SECURE = "true"

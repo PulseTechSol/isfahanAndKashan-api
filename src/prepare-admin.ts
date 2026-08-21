@@ -1,6 +1,10 @@
 import { execSync } from 'child_process';
 import * as fs from 'fs';
-import * as path from 'path';
+import {
+  getAdminJsBundleDir,
+  getAdminJsBundlePath,
+  syncAdminJsBundleMirror,
+} from './admin/admin-env';
 
 /**
  * Ensures AdminJS component bundle exists BEFORE Nest/AdminJS modules load.
@@ -11,9 +15,8 @@ export async function prepareAdminJsBundle(): Promise<void> {
     return;
   }
 
-  const bundleDir = path.join(process.cwd(), 'dist', '.adminjs');
-  const bundlePath = path.join(bundleDir, 'bundle.js');
-  fs.mkdirSync(bundleDir, { recursive: true });
+  const bundleDir = getAdminJsBundleDir();
+  const bundlePath = getAdminJsBundlePath();
   process.env.ADMIN_JS_TMP_DIR = bundleDir;
 
   const skipIfExists =
@@ -21,27 +24,36 @@ export async function prepareAdminJsBundle(): Promise<void> {
 
   if (skipIfExists) {
     console.log(`AdminJS: using pre-built bundle (${bundlePath})`);
+    syncAdminJsBundleMirror();
     return;
   }
 
   if (fs.existsSync(bundlePath)) {
     console.log(`AdminJS: using existing bundle (${bundlePath})`);
+    syncAdminJsBundleMirror();
     return;
   }
 
   console.log('AdminJS: building components bundle at startup...');
-  execSync('node dist/admin/bundle-admin-components.js', {
-    stdio: 'inherit',
-    env: {
-      ...process.env,
-      NODE_ENV: 'production',
-      ADMIN_JS_TMP_DIR: bundleDir,
-    },
-  });
+  try {
+    execSync('node dist/admin/bundle-admin-components.js', {
+      stdio: 'inherit',
+      env: {
+        ...process.env,
+        NODE_ENV: 'production',
+        ADMIN_JS_TMP_DIR: bundleDir,
+      },
+    });
+  } catch (error) {
+    throw new Error(
+      `AdminJS bundle build failed. Ensure "npm run build" completed successfully. ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
 
   if (!fs.existsSync(bundlePath)) {
     throw new Error(`AdminJS bundle was not created at ${bundlePath}`);
   }
 
+  syncAdminJsBundleMirror();
   console.log(`AdminJS: bundle ready (${bundlePath})`);
 }
