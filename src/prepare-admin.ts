@@ -1,7 +1,10 @@
 import { execSync } from 'child_process';
 import * as fs from 'fs';
+import * as path from 'path';
 import {
-  getAdminJsBundleDir,
+  configureAdminJsEnv,
+  ensureAdminJsBundleAtCanonicalPath,
+  findAdminJsBundlePath,
   getAdminJsBundlePath,
   syncAdminJsBundleMirror,
 } from './admin/admin-env';
@@ -15,26 +18,30 @@ export async function prepareAdminJsBundle(): Promise<void> {
     return;
   }
 
-  const bundleDir = getAdminJsBundleDir();
+  configureAdminJsEnv();
   const bundlePath = getAdminJsBundlePath();
-  process.env.ADMIN_JS_TMP_DIR = bundleDir;
 
   const skipIfExists =
-    process.env.ADMIN_JS_SKIP_BUNDLE === 'true' && fs.existsSync(bundlePath);
+    process.env.ADMIN_JS_SKIP_BUNDLE === 'true' && findAdminJsBundlePath();
 
   if (skipIfExists) {
-    console.log(`AdminJS: using pre-built bundle (${bundlePath})`);
+    const resolved = ensureAdminJsBundleAtCanonicalPath();
+    console.log(`AdminJS: using pre-built bundle (${resolved})`);
     syncAdminJsBundleMirror();
     return;
   }
 
-  if (fs.existsSync(bundlePath)) {
-    console.log(`AdminJS: using existing bundle (${bundlePath})`);
+  const existing = findAdminJsBundlePath();
+  if (existing) {
+    const resolved = ensureAdminJsBundleAtCanonicalPath();
+    console.log(`AdminJS: using existing bundle (${resolved})`);
     syncAdminJsBundleMirror();
     return;
   }
 
   console.log('AdminJS: building components bundle at startup...');
+  const bundleDir = path.dirname(bundlePath);
+
   try {
     execSync('node dist/admin/bundle-admin-components.js', {
       stdio: 'inherit',
@@ -50,10 +57,7 @@ export async function prepareAdminJsBundle(): Promise<void> {
     );
   }
 
-  if (!fs.existsSync(bundlePath)) {
-    throw new Error(`AdminJS bundle was not created at ${bundlePath}`);
-  }
-
+  const resolved = ensureAdminJsBundleAtCanonicalPath();
   syncAdminJsBundleMirror();
-  console.log(`AdminJS: bundle ready (${bundlePath})`);
+  console.log(`AdminJS: bundle ready (${resolved})`);
 }
