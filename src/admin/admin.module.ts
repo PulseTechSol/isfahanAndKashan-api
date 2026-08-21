@@ -122,7 +122,6 @@ const restrictDestructiveActions = {
                   listProperties: [
                     'mainImage',
                     'name',
-                    '_id',
                     'slug',
                     'price',
                     'isActive',

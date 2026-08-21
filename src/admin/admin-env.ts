@@ -2,17 +2,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 /**
- * Must run before AdminJS is imported (via `node -r ./dist/admin/admin-env.js`).
- * Points ADMIN_JS_TMP_DIR at the pre-built bundle shipped inside dist/.
+ * Runs before AdminJS is imported (via `node -r ./dist/admin/admin-env.js`).
+ * Forces bundle output into dist/.adminjs so it ships with the Nest build artifact.
  */
-const bundleDirs = [
-  path.join(process.cwd(), 'dist', '.adminjs'),
-  path.join(process.cwd(), '.adminjs'),
-];
-
-for (const dir of bundleDirs) {
-  if (fs.existsSync(path.join(dir, 'bundle.js'))) {
-    process.env.ADMIN_JS_TMP_DIR = dir;
-    break;
-  }
+if (process.env.NODE_ENV === 'production') {
+  process.env.ADMIN_JS_TMP_DIR = path.join(process.cwd(), 'dist', '.adminjs');
+  fs.mkdirSync(process.env.ADMIN_JS_TMP_DIR, { recursive: true });
 }
