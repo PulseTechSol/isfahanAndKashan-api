@@ -1,26 +1,35 @@
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 
-/** Absolute directory where AdminJS writes/reads components.bundle.js */
+/** Bundle produced during `npm run build` */
+export function getBuildAdminJsBundlePath(): string {
+  return path.join(process.cwd(), 'dist', '.adminjs', 'bundle.js');
+}
+
+/** Writable runtime dir — AdminJS reads ADMIN_JS_TMP_DIR when its module loads */
+export function getRuntimeAdminJsBundleDir(): string {
+  return path.join(os.tmpdir(), 'adminjs');
+}
+
+export function getRuntimeAdminJsBundlePath(): string {
+  return path.join(getRuntimeAdminJsBundleDir(), 'bundle.js');
+}
+
+/** @deprecated use getRuntimeAdminJsBundlePath */
 export function getAdminJsBundleDir(): string {
-  const configured = process.env.ADMIN_JS_TMP_DIR;
-  if (configured) {
-    return path.isAbsolute(configured)
-      ? configured
-      : path.join(process.cwd(), configured);
-  }
-  return path.join(process.cwd(), 'dist', '.adminjs');
+  return getRuntimeAdminJsBundleDir();
 }
 
+/** @deprecated use getRuntimeAdminJsBundlePath */
 export function getAdminJsBundlePath(): string {
-  return path.join(getAdminJsBundleDir(), 'bundle.js');
+  return getRuntimeAdminJsBundlePath();
 }
 
-/** Possible bundle locations (build output vs legacy AdminJS default dir). */
 export function findAdminJsBundlePath(): string | undefined {
   const candidates = [
-    getAdminJsBundlePath(),
-    path.join(process.cwd(), 'dist', '.adminjs', 'bundle.js'),
+    getRuntimeAdminJsBundlePath(),
+    getBuildAdminJsBundlePath(),
     path.join(process.cwd(), '.adminjs', 'bundle.js'),
   ];
 
@@ -33,25 +42,30 @@ export function findAdminJsBundlePath(): string | undefined {
   return undefined;
 }
 
-/** Copy bundle to dist/.adminjs so production always serves a stable path. */
-export function ensureAdminJsBundleAtCanonicalPath(): string {
-  const canonicalPath = path.join(process.cwd(), 'dist', '.adminjs', 'bundle.js');
-  const existing = findAdminJsBundlePath();
+/**
+ * Copy a built/existing bundle into the runtime dir and point AdminJS at it.
+ * Must run before the adminjs package is imported.
+ */
+export function deployAdminJsBundleToRuntime(): string {
+  const runtimeDir = getRuntimeAdminJsBundleDir();
+  const runtimePath = getRuntimeAdminJsBundlePath();
+  fs.mkdirSync(runtimeDir, { recursive: true });
 
-  if (existing && existing !== canonicalPath) {
-    fs.mkdirSync(path.dirname(canonicalPath), { recursive: true });
-    fs.copyFileSync(existing, canonicalPath);
+  const source = findAdminJsBundlePath();
+  if (!source) {
+    throw new Error(
+      `AdminJS bundle not found. Expected ${getBuildAdminJsBundlePath()}`,
+    );
   }
 
-  if (!fs.existsSync(canonicalPath)) {
-    throw new Error(`AdminJS bundle not found (expected ${canonicalPath})`);
+  if (path.resolve(source) !== path.resolve(runtimePath)) {
+    fs.copyFileSync(source, runtimePath);
   }
 
-  process.env.ADMIN_JS_TMP_DIR = path.dirname(canonicalPath);
-  return canonicalPath;
+  process.env.ADMIN_JS_TMP_DIR = runtimeDir;
+  return runtimePath;
 }
 
-/** Keep legacy .adminjs path in sync for tools that still look there. */
 export function syncAdminJsBundleMirror(): void {
   const bundlePath = findAdminJsBundlePath();
   if (!bundlePath) {
@@ -63,13 +77,11 @@ export function syncAdminJsBundleMirror(): void {
   fs.copyFileSync(bundlePath, path.join(legacyDir, 'bundle.js'));
 }
 
-/**
- * Must run before AdminJS is imported (via `node -r ./dist/admin/admin-env.js`).
- */
+/** Preload hook: set runtime dir before adminjs module loads. */
 export function configureAdminJsEnv(): void {
-  const bundleDir = path.join(process.cwd(), 'dist', '.adminjs');
-  fs.mkdirSync(bundleDir, { recursive: true });
-  process.env.ADMIN_JS_TMP_DIR = bundleDir;
+  const runtimeDir = getRuntimeAdminJsBundleDir();
+  fs.mkdirSync(runtimeDir, { recursive: true });
+  process.env.ADMIN_JS_TMP_DIR = runtimeDir;
 }
 
 if (process.env.NODE_ENV === 'production') {

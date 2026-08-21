@@ -6,28 +6,24 @@ import * as path from 'path';
  * ADMIN_JS_TMP_DIR must be set before AdminJS module loads (see top of file).
  */
 async function main(): Promise<void> {
-  const bundleDir =
-    process.env.ADMIN_JS_TMP_DIR ??
-    path.join(process.cwd(), 'dist', '.adminjs');
-  const absoluteBundleDir = path.isAbsolute(bundleDir)
-    ? bundleDir
-    : path.join(process.cwd(), bundleDir);
+  const buildBundlePath = path.join(process.cwd(), 'dist', '.adminjs', 'bundle.js');
+  const buildBundleDir = path.dirname(buildBundlePath);
 
   process.env.NODE_ENV = 'production';
-  process.env.ADMIN_JS_TMP_DIR = absoluteBundleDir;
-  fs.mkdirSync(absoluteBundleDir, { recursive: true });
+  process.env.ADMIN_JS_TMP_DIR = buildBundleDir;
+  fs.mkdirSync(buildBundleDir, { recursive: true });
 
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { buildAdminJsBundle } = require('./build-admin-bundle') as typeof import('./build-admin-bundle');
   await buildAdminJsBundle();
 
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { ensureAdminJsBundleAtCanonicalPath, syncAdminJsBundleMirror } =
-    require('./admin-env') as typeof import('./admin-env');
+  if (!fs.existsSync(buildBundlePath)) {
+    throw new Error(`AdminJS bundle was not created at ${buildBundlePath}`);
+  }
 
-  const bundlePath = ensureAdminJsBundleAtCanonicalPath();
-  syncAdminJsBundleMirror();
-  console.log(`AdminJS: components bundle written to ${bundlePath}`);
+  console.log(
+    `AdminJS: components bundle written to ${buildBundlePath} (${fs.statSync(buildBundlePath).size} bytes)`,
+  );
 }
 
 main().catch((error: unknown) => {

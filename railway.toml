@@ -8,3 +8,4 @@ restartPolicyType = "on_failure"
 [deploy.env]
 NODE_ENV = "production"
 ADMIN_COOKIE_SECURE = "true"
+ADMIN_JS_SKIP_BUNDLE = "true"

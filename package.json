@@ -6,7 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "postinstall": "patch-package",
+    "postinstall": "patch-package && node scripts/apply-adminjs-nestjs-patch.js",
     "build": "nest build && mkdir -p dist/.adminjs && ADMIN_JS_TMP_DIR=dist/.adminjs NODE_ENV=production node dist/admin/bundle-admin-components.js",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "npm run start:prod",
